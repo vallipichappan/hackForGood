@@ -8,3 +8,5 @@ langdetect==1.0.9
 langgraph==0.3.0
 python-dotenv==1.0.1
 boto3==1.36.26
+pydantic==2.10.6 
+pydantic_core==2.27.2

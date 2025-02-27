@@ -7,21 +7,14 @@ import traceback
 import boto3
 import base64
 
+from multiagent_handler import *
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 lambda_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lambda_module')
 if lambda_dir not in sys.path:
     sys.path.append(lambda_dir)
 
 
-try:
-    from lambda_module.multiagent_handler import app, ChatState
-except ImportError:
-    try:
-        from multiagent_handler import app, ChatState
-    except ImportError:
-        import logging
-        logging.error("Could not import multiagent_handler. Using fallback response.")
-        
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -74,6 +67,7 @@ def handle(event, context):
                 message_text = message['text']['body'].lower()
                 logger.info(f"Received message from {phone_number}: {message_text}")
                 response_text = get_claude_response(phone_number, message_text)
+                # response_text=''
                 logger.info(f"Sending response to {phone_number}: {response_text}")
 
             elif message_type == 'audio' or message_type == 'voice':
@@ -114,24 +108,32 @@ def get_claude_response(phone_number, message_text):
         conversation_history[phone_number] = conversation_history[phone_number][-10:]
     
     try:
-        # Initialize the chat state with the current message
-        state = ChatState()
-        state.query = message_text
+        intent = detect_question_intent(query=message_text)
         
-        # If there's existing conversation history, add it to the state
-        for msg in conversation_history[phone_number][:-1]:  # Exclude the message we just added
-            state.chat_history.append(msg)
-        
-        # Process the message through the workflow
-        result = app.invoke(state)
-        
-        # Extract the response
-        assistant_message = result.response
-        
-        # Add assistant's response to conversation history
-        conversation_history[phone_number].append({"role": "assistant", "content": assistant_message})
-        
+        source_language = identify_language(query=message_text)
+
+        translated_message = message_text
+
+        if (source_language != "en"):
+            translated_message = translate_query(query=message_text,source_language_code=source_language,target_language_code="en")
+
+        similar_docs = document_retrieval(intent=intent, query=translated_message)
+
+        state = {
+            "query": message_text,
+            "chat_history": conversation_history[phone_number],
+            "context": similar_docs,
+            "response": ""
+        }
+
+        graph_app = graph()
+        chat_response = graph_app.invoke(state)
+
+        assistant_message = chat_response['response']
+        conversation_history[phone_number] = chat_response['chat_history']
+
         return assistant_message
+    
     except Exception as e:
         logger.error(f"Error processing message through workflow: {str(e)}")
         logger.error(f"Exception details: {type(e).__name__}, {str(e)}")
@@ -146,6 +148,7 @@ def process_voice_message(phone_number, media_id):
         headers = {
             'Authorization': f"Bearer {os.environ['WHATSAPP_TOKEN']}",
         }
+        logger.info('Received voice message')
         
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
@@ -202,6 +205,7 @@ def process_voice_message(phone_number, media_id):
         
         # 4. Process the transcribed text with your AI
         return get_claude_response(phone_number, transcribed_text)
+        # return ''
         
     except Exception as e:
         logger.error(f"Error processing voice message: {str(e)}")

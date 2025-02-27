@@ -8,7 +8,6 @@ from aws_cdk import (
     Duration,
     CfnOutput,
     SecretValue,
-    BundlingOptions  # Add this import
 )
 from constructs import Construct
 import json
@@ -29,12 +28,20 @@ class WhatsAppAIStack(Stack):
             }))
         )
 
+        # dependencies_layer = _lambda.LayerVersion(
+        #     self, 'DependenciesLayer',
+        #     code=_lambda.Code.from_asset('lambda_layer.zip'),
+        #     compatible_runtimes=[_lambda.Runtime.PYTHON_3_11],
+        #     description='Layer containing dependencies for WhatsApp AI Lambda'
+        # )
+
         # Lambda function
         whatsapp_handler = _lambda.Function(
             self, 'WhatsAppHandler',
             runtime=_lambda.Runtime.PYTHON_3_11,
             code=_lambda.Code.from_asset('lambda_package.zip'),
             handler='whatsapp_handler.handle',
+            # layers=[dependencies_layer],
             timeout=Duration.seconds(60),
             environment={
                 'WHATSAPP_TOKEN': whatsapp_secret.secret_value_from_json('whatsapp_token').unsafe_unwrap(),
@@ -42,6 +49,17 @@ class WhatsAppAIStack(Stack):
                 'VERIFY_TOKEN': whatsapp_secret.secret_value_from_json('verify_token').unsafe_unwrap(),
             }
         )
+
+        # whatsapp_handler = _lambda.DockerImageFunction(
+        #     self, 'WhatsAppHandler',
+        #     code=_lambda.DockerImageCode.from_image_asset('docker-lambda'),
+        #     timeout=Duration.seconds(60),
+        #     environment={
+        #         'WHATSAPP_TOKEN': whatsapp_secret.secret_value_from_json('whatsapp_token').unsafe_unwrap(),
+        #         'PHONE_NUMBER_ID': whatsapp_secret.secret_value_from_json('phone_number_id').unsafe_unwrap(),
+        #         'VERIFY_TOKEN': whatsapp_secret.secret_value_from_json('verify_token').unsafe_unwrap(),
+        #     }
+        # )
 
         whatsapp_handler.add_to_role_policy(iam.PolicyStatement(
             actions=[
