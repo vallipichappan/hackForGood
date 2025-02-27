@@ -1,7 +1,7 @@
 import aws_cdk as core
 import aws_cdk.assertions as assertions
 
-from whatsapp_ai_bot.whatsapp_ai_bot_stack import WhatsappAiBotStack
+from whatsapp_ai_bot.whatsapp_ai_stack import WhatsappAiBotStack
 
 # example tests. To run these tests, uncomment this file along with the example
 # resource in whatsapp_ai_bot/whatsapp_ai_bot_stack.py
