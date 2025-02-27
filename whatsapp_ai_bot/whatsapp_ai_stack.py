@@ -13,6 +13,7 @@ from aws_cdk import (
 from constructs import Construct
 import json
 import subprocess
+from aws_cdk import Duration
 
 class WhatsAppAIStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
@@ -22,9 +23,9 @@ class WhatsAppAIStack(Stack):
         whatsapp_secret = secretsmanager.Secret(
             self, 'WhatsAppSecret',
             secret_string_value=SecretValue.unsafe_plain_text(json.dumps({
-                'whatsapp_token': '',
-                'phone_number_id': '',
-                'verify_token': ''
+                'whatsapp_token': 'EAAQ9Rpze738BOZCkmcyBZBZCmtclsflPZBLZByUpmSntdpMZAqAepx5URen3YUXQoI9j9NksZAGTqoZBqOkaXVx3WGHTBByBSI6gxBckySrzfaifelBoD7VBQYF9DWP8elEZAnrvyE4weDS5ZBJ2MtrCZCmUeQm2ZA8s9U2hKpsg2cBCIsW1TbwuYi31VBrHw5r2cIVWsMBHwrQv7ZCuZBk7GPhF7IZCqJzBVQZD',
+                'phone_number_id': '599525519903076',
+                'verify_token': '12344321'
             }))
         )
 
@@ -34,6 +35,7 @@ class WhatsAppAIStack(Stack):
             runtime=_lambda.Runtime.PYTHON_3_11,
             code=_lambda.Code.from_asset('lambda_package.zip'),
             handler='whatsapp_handler.handle',
+            timeout=Duration.seconds(60),
             environment={
                 'WHATSAPP_TOKEN': whatsapp_secret.secret_value_from_json('whatsapp_token').unsafe_unwrap(),
                 'PHONE_NUMBER_ID': whatsapp_secret.secret_value_from_json('phone_number_id').unsafe_unwrap(),

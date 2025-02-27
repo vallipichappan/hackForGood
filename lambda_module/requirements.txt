@@ -1,0 +1,10 @@
+requests==2.31.0
+langchain-aws==0.2.13
+langchain==0.3.19
+langchain-community==0.3.18
+langchain-core==0.3.38
+langchain-elasticsearch==0.3.2
+langdetect==1.0.9
+langgraph==0.3.0
+python-dotenv==1.0.1
+boto3==1.36.26

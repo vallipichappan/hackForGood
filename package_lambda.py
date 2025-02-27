@@ -13,13 +13,13 @@ def package_lambda():
         'pip',
         'install',
         '-r',
-        'lambda/requirements.txt',
+        'lambda_module/requirements.txt',
         '--target',
         'package'
     ])
 
     # Copy lambda handler
-    shutil.copy('lambda/whatsapp_handler.py', 'package/whatsapp_handler.py')
+    shutil.copy('lambda_module/whatsapp_handler.py', 'package/whatsapp_handler.py')
 
     # Create zip file
     if os.path.exists('lambda_package.zip'):
