@@ -4,19 +4,10 @@ import boto3
 from datetime import datetime
 import logging
 import requests
+import multiagent_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-
-bedrock = boto3.client(
-    service_name='bedrock',
-    region_name='ap-southeast-1'
-)
-
-bedrock_runtime = boto3.client(
-    service_name='bedrock-runtime',
-    region_name='eu-west-2'  
-)
 
 conversation_history = {}
 
@@ -106,14 +97,14 @@ def get_claude_response(phone_number, message_text):
     
     try:
         # Get the Jurassic-2 Ultra model ID
-        bedrock = boto3.client('bedrock', region_name='eu-west-2')  # Update region if needed
-        foundation_models = bedrock.list_foundation_models()
-        matching_model = next((model for model in foundation_models["modelSummaries"] 
-                              if model.get("modelName") == "Jurassic-2 Ultra"), None)
+        # bedrock = boto3.client('bedrock', region_name='eu-west-2')  # Update region if needed
+        # foundation_models = bedrock.list_foundation_models()
+        # matching_model = next((model for model in foundation_models["modelSummaries"] 
+        #                       if model.get("modelName") == "Jurassic-2 Ultra"), None)
         
-        if not matching_model:
-            logger.error("Jurassic-2 Ultra model not found")
-            return "I'm sorry, I'm having trouble accessing my language model right now."
+        # if not matching_model:
+        #     logger.error("Jurassic-2 Ultra model not found")
+        #     return "I'm sorry, I'm having trouble accessing my language model right now."
         
         # Create a prompt that includes conversation history
         prompt = ""
@@ -127,31 +118,43 @@ def get_claude_response(phone_number, message_text):
                 
         prompt += "Assistant: "
         
-        # The payload to be provided to Bedrock
-        body = json.dumps({
-            "prompt": prompt,
-            "maxTokens": 500,
-            "temperature": 0.7,
-            "topP": 1,
-        })
+        # # The payload to be provided to Bedrock
+        # body = json.dumps({
+        #     "prompt": prompt,
+        #     "maxTokens": 500,
+        #     "temperature": 0.7,
+        #     "topP": 1,
+        # })
+
+
+         # The payload w/o json
+        body = {"prompt": prompt,
+                "maxTokens": 500,
+                "temperature": 0.7,
+                "topP": 1,
+                }
         
-        # Call Bedrock Runtime to invoke the model
-        bedrock_runtime = boto3.client('bedrock-runtime', region_name='eu-west-2')  # Update region if needed
-        response = bedrock_runtime.invoke_model(
-            body=body,
-            modelId=matching_model["modelId"],
-            accept='application/json',
-            contentType='application/json'
-        )
+        # # Call Bedrock Runtime to invoke the model
+        # bedrock_runtime = boto3.client('bedrock-runtime', region_name='eu-west-2')  # Update region if needed
+        # response = bedrock_runtime.invoke_model(
+        #     body=body,
+        #     modelId=matching_model["modelId"],
+        #     accept='application/json',
+        #     contentType='application/json'
+        # )
+
+        #TO DO: integrate with agent handler
+        state = multiagent_handler.trigger_workflow(body)
+        return state.response
+
+        # # Parse the response
+        # response_body = json.loads(response.get('body').read())
+        # assistant_message = response_body.get('completions', [{}])[0].get('data', {}).get('text', "").strip()
         
-        # Parse the response
-        response_body = json.loads(response.get('body').read())
-        assistant_message = response_body.get('completions', [{}])[0].get('data', {}).get('text', "").strip()
+        # # Add assistant's response to conversation history
+        # conversation_history[phone_number].append({"role": "assistant", "content": assistant_message})
         
-        # Add assistant's response to conversation history
-        conversation_history[phone_number].append({"role": "assistant", "content": assistant_message})
-        
-        return assistant_message
+        # return assistant_message
     except Exception as e:
         logger.error(f"Error getting response from Jurassic-2: {str(e)}")
         logger.error(f"Exception details: {type(e).__name__}, {str(e)}")

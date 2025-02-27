@@ -172,20 +172,23 @@ def generate_response_node(state: ChatState) -> ChatState:
     state.response = response.content
     return state
 
-#Define graph
-# Create the graph
-workflow = Graph()
+def trigger_workflow(body: dict) -> str:
+    chat_state = ChatState(query=body["prompt"])
 
-# Add nodes to the graph
-workflow.add_node("add_user_query", add_user_query_node)
-workflow.add_node("generate_response", generate_response_node)
+    #Define graph
+    # Create the graph
+    workflow = Graph()
 
-# Define edges (order of execution)
-workflow.add_edge("add_user_query", "generate_response")
+    # Add nodes to the graph
+    workflow.add_node("add_user_query", add_user_query_node, chat_state)
+    workflow.add_node("generate_response", generate_response_node, chat_state)
 
-# Set entry and exit points
-workflow.set_entry_point("add_user_query")
-workflow.set_exit_point("generate_response")
+    # Define edges (order of execution)
+    workflow.add_edge("add_user_query", "generate_response")
 
-# Compile the graph
-app = workflow.compile()
+    # Set entry and exit points
+    workflow.set_entry_point("add_user_query")
+    workflow.set_exit_point("generate_response")
+
+    # Compile the graph
+    app = workflow.compile()
