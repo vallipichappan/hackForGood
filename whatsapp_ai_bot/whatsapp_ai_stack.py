@@ -41,6 +41,16 @@ class WhatsAppAIStack(Stack):
             }
         )
 
+        whatsapp_handler.add_to_role_policy(iam.PolicyStatement(
+            actions=[
+                "bedrock:ListFoundationModels",
+                "bedrock:GetFoundationModel",
+                "bedrock-runtime:InvokeModel"
+            ],
+            resources=["*"]
+        ))
+
+
         # API Gateway
         api = apigw.RestApi(
             self, 'WhatsAppAPI',
