@@ -23,9 +23,9 @@ class WhatsAppAIStack(Stack):
         whatsapp_secret = secretsmanager.Secret(
             self, 'WhatsAppSecret',
             secret_string_value=SecretValue.unsafe_plain_text(json.dumps({
-                'whatsapp_token': 'EAAQ9Rpze738BOZCkmcyBZBZCmtclsflPZBLZByUpmSntdpMZAqAepx5URen3YUXQoI9j9NksZAGTqoZBqOkaXVx3WGHTBByBSI6gxBckySrzfaifelBoD7VBQYF9DWP8elEZAnrvyE4weDS5ZBJ2MtrCZCmUeQm2ZA8s9U2hKpsg2cBCIsW1TbwuYi31VBrHw5r2cIVWsMBHwrQv7ZCuZBk7GPhF7IZCqJzBVQZD',
-                'phone_number_id': '599525519903076',
-                'verify_token': '12344321'
+                'whatsapp_token': '',
+                'phone_number_id': '',
+                'verify_token': ''
             }))
         )
 
